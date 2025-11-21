@@ -1,0 +1,16 @@
+[
+    {
+        "username": "ayman",
+        "password": "azerty",
+        "is_admin": false,
+        "abonnement": "basique",
+        "abonnement_expire": "2025-12-21"
+    },
+    {
+        "username": "boss",
+        "password": "1234",
+        "is_admin": true,
+        "abonnement": "basique",
+        "abonnement_expire": "2025-12-21"
+    }
+]

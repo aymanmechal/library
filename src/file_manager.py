@@ -1,7 +1,7 @@
 import json
 import csv
 
-from src.models import Bibliotheque, Livre, LivreNumerique
+from src.models import Bibliotheque, Livre, LivreNumerique, User
 from src.exceptions import ErreurBibliotheque
 
 
@@ -18,65 +18,40 @@ class BibliothequeAvecFichier(Bibliotheque):
             json.dump(data, fichier, indent=4, ensure_ascii=False)
 
         except PermissionError:
-            print("Permission refusée !")
             raise ErreurBibliotheque("Permission refusée !")
-
-        else:
-            print("Lecture réussie !")
-
-        finally:
-            try:
-                fichier.close()
-            except:
-                pass
+    
 
     def load_from_json(self):
         try:
-            fichier = open(self.json_path, "r", encoding="utf-8")
-            contenu = fichier.read()
-            data = json.loads(contenu)
+            with open(self.json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
 
         except FileNotFoundError:
-            print("Fichier non trouvé !")
             raise ErreurBibliotheque("Fichier non trouvé !")
-
         except PermissionError:
-            print("Permission refusée !")
             raise ErreurBibliotheque("Permission refusée !")
-
         except json.JSONDecodeError:
-            print("Format invalide !")
-            raise ErreurBibliotheque("Format invalide !")
+            raise ErreurBibliotheque("Format JSON invalide !")
 
-        else:
-            print("Lecture réussie !")
+        self.livres = []
 
-            self.livres = []
+        for item in data:
+            if item["type"] == "numerique":
+                livre = LivreNumerique(
+                    item["titre"],
+                    item["auteur"],
+                    item["isbn"],
+                    item["taille"]
+                )
+            else:
+                livre = Livre(
+                    item["titre"],
+                    item["auteur"],
+                    item["isbn"]
+                )
 
-            for texte in data:
-                if "MB" in texte:
-                    titre_auteur, reste = texte.split("(ISBN:")
-                    titre, auteur = titre_auteur.split(",")
-                    isbn, taille = reste.replace(")", "").split(",")
-                    livre = LivreNumerique(
-                        titre.strip(),
-                        auteur.strip(),
-                        isbn.strip(),
-                        float(taille.replace("MB", ""))
-                    )
-                else:
-                    titre_auteur, reste = texte.split("(ISBN:")
-                    titre, auteur = titre_auteur.split(",")
-                    isbn = reste.replace(")", "").strip()
-                    livre = Livre(titre.strip(), auteur.strip(), isbn)
+            self.livres.append(livre)
 
-                self.livres.append(livre)
-
-        finally:
-            try:
-                fichier.close()
-            except:
-                pass
 
     def dumpcsv(self, csv_path: str = "data/output.csv"):
         try:
@@ -84,25 +59,13 @@ class BibliothequeAvecFichier(Bibliotheque):
             data = json.load(fichier_json)
 
         except FileNotFoundError:
-            print("Fichier non trouvé !")
             raise ErreurBibliotheque("Fichier non trouvé !")
 
         except PermissionError:
-            print("Permission refusée !")
             raise ErreurBibliotheque("Permission refusée !")
 
         except json.JSONDecodeError:
-            print("Format invalide !")
             raise ErreurBibliotheque("Format invalide !")
-
-        else:
-            print("Lecture réussie !")
-
-        finally:
-            try:
-                fichier_json.close()
-            except:
-                pass
 
         try:
             fichier_csv = open(csv_path, "w", newline="", encoding="utf-8")
@@ -113,14 +76,4 @@ class BibliothequeAvecFichier(Bibliotheque):
                 writer.writerow([livre])
 
         except PermissionError:
-            print("Permission refusée !")
             raise ErreurBibliotheque("Permission refusée !")
-
-        else:
-            print("Lecture réussie !")
-
-        finally:
-            try:
-                fichier_csv.close()
-            except:
-                pass
